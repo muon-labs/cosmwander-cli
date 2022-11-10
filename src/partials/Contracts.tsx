@@ -57,7 +57,10 @@ const Contracts = ({}) => {
               border={
                 c === contract ? { type: 'bg', bg: 'white' } : { type: 'line' }
               }
-            >{`${c}${c === contract ?'\n └1':''}`}</button>
+            >
+              {/* {`${c}${c === contract ?'\n └1':''}`} */}
+              {`${c}`}
+            </button>
           )
         })
       )}
