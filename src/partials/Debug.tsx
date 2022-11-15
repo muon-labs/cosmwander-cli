@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react'
 import { useAppContext } from '../context/ScreenContext'
 
 const Debug = ({}) => {

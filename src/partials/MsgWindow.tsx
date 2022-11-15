@@ -1,4 +1,4 @@
-import fs from 'fs'
+import * as fs from 'fs'
 import { useEffect, useState } from 'react'
 import { useAppContext } from '../context/ScreenContext'
 import { getContractDetails } from '../utils/fileUtils'

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import * as chalk from 'chalk'
+import * as fs from 'fs'
+import { useEffect, useState } from 'react'
 import { ContractMetadata, useAppContext } from '../context/ScreenContext'
-import fs from 'fs'
-import { formatWithUnderscores, getCWD, loadMeta } from '../utils/fileUtils'
-import chalk from 'chalk'
+import { getCWD, loadMeta } from '../utils/fileUtils'
 
 const Contracts = ({}) => {
   const {

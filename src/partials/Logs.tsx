@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import * as chalk from 'chalk'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import { useEffect, useRef, useState } from 'react'
 import { SpawnCommand, useAppContext } from '../context/ScreenContext'

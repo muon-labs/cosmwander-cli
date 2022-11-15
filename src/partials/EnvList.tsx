@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import { useAppContext } from '../context/ScreenContext'
 import { TPosition } from '../utils/types'
 

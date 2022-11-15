@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import * as chalk from 'chalk'
 import { useEffect, useRef, useState } from 'react'
 import { DetailedBlessedProps, TextareaElement } from 'react-blessed'
 import {

@@ -7,7 +7,7 @@ import {
   useState
 } from 'react'
 import { TPosition } from '../utils/types'
-import blessed from 'blessed'
+import * as blessed from 'blessed'
 import { saveMeta } from '../utils/fileUtils'
 
 function defaultSetter () {}

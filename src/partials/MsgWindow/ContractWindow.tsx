@@ -1,5 +1,5 @@
-import chalk from 'chalk'
-import fs from 'fs'
+import * as chalk from 'chalk'
+import * as fs from 'fs'
 import { ContractMetadata, useAppContext } from '../../context/ScreenContext'
 import { getEnv, getArgsForUploadType } from '../../utils/commandUtils'
 import {

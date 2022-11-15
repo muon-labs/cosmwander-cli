@@ -1,4 +1,6 @@
-import blessed from 'blessed'
+#!/usr/bin/env node
+
+import * as blessed from 'blessed'
 import { render } from 'react-blessed'
 import App from './App'
 import { AppWrapper } from './context/ScreenContext'

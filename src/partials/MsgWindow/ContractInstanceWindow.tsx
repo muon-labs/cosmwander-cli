@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import * as chalk from 'chalk'
 import { useState } from 'react'
 import { useAppContext } from '../../context/ScreenContext'
 import ExecuteMsgTab from './ExecuteMsgTab'
