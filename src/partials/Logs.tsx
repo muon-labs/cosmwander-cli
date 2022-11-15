@@ -1,10 +1,8 @@
-import React, { EffectCallback, useEffect, useRef, useState } from 'react'
-import { TPosition } from '../utils/types'
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
-import { WriteStream } from 'fs'
-import FromStream from '../utils/FromStream'
-import { SpawnCommand, useAppContext } from '../context/ScreenContext'
 import chalk from 'chalk'
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import { useEffect, useRef, useState } from 'react'
+import { SpawnCommand, useAppContext } from '../context/ScreenContext'
+import { TPosition } from '../utils/types'
 
 let currentCommandOutput = ''
 

@@ -7,10 +7,10 @@ import {
 } from '../context/ScreenContext'
 
 export function getCWD () {
-  const rootPath =
-    '/Users/nikitajerschow/Documents/PassiveIncome/CryptoBase/QuasarBase/quasar/smart-contracts'
-  return rootPath
-  // return process.cwd()
+  // const rootPath =
+  //   '/Users/nikitajerschow/Documents/PassiveIncome/CryptoBase/QuasarBase/quasar/smart-contracts'
+  // return rootPath
+  return process.cwd()
 }
 
 export function getFileDetails (filePath: string) {

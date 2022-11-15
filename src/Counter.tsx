@@ -9,6 +9,7 @@ const Counter = (props: any) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setFontIndex(fontIndex + 1)
+      // @ts-ignore
       boxRef?.current.setScrollPerc(100)
     }, 1000)
     return () => clearTimeout(timer)
@@ -49,6 +50,7 @@ const Counter = (props: any) => {
         height={3}
         border={{ type: 'line' }}
         mouse
+        // @ts-ignore
         onPress={handleCountButton}
       >
         Click me

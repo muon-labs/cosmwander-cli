@@ -1,1 +1,2 @@
-require('./index.tsx')
+
+require('./root.tsx')
