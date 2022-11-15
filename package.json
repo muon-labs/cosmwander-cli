@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "blessed": "^0.1.81",
-    "chalk": "^5.1.2",
+    "chalk": "^4.1.2",
     "react-blessed": "^0.7.2"
   },
   "devDependencies": {

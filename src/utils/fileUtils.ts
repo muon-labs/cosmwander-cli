@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { execSync } from 'child_process'
+import { CodeMetadata, ContractInstanceMetadata, ContractMetadata } from '../context/ScreenContext'
 
 export function getCWD () {
   const rootPath =
@@ -14,9 +15,16 @@ export function getFileDetails (filePath: string) {
   return fs.statSync(filePath)
 }
 
+export const getWasmArtifactPath = (contract: string) =>
+  `${getCWD()}/target/wasm32-unknown-unknown/release/${formatWithUnderscores(
+    contract
+  )}.wasm`
+export const getOptimizedArtifactPath = (contract: string) =>
+  `${getCWD()}/artifacts/${formatWithUnderscores(contract)}.wasm`
+
 export function getWasmArtifactsDetails (contract: string) {
   try {
-    const filePath = `${getCWD()}/target/wasm32-unknown-unknown/release/${contract}.wasm`
+    const filePath = getWasmArtifactPath(contract)
     return getFileDetails(filePath)
   } catch (e) {
     return null
@@ -25,7 +33,7 @@ export function getWasmArtifactsDetails (contract: string) {
 
 export function getOptimizedArtifactsDetails (contract: string) {
   try {
-    const filePath = `${getCWD()}/artifacts/${contract}.wasm`
+    const filePath = getWasmArtifactPath(contract)
     return getFileDetails(filePath)
   } catch (e) {
     return null
@@ -46,4 +54,100 @@ export function formatWithUnderscores (contract: string) {
 
 export function getContractDirectory (contract: string) {
   return `${getCWD()}/contracts/${contract}`
+}
+
+export function getDefaultForContractFilename (
+  contract: string
+): ContractMetadata {
+  return {
+    fileName: contract,
+    buildName: formatWithUnderscores(contract),
+    codes: [],
+    initMsgs: []
+  }
+}
+
+export function getDefaultForCodeId (codeID: string): CodeMetadata {
+  return {
+    codeID,
+    deployedContracts: []
+  }
+}
+
+export function getDefaultForContractInstance(address: string) : ContractInstanceMetadata {
+  return {
+    address,
+    executeMsgs: [],
+    queryMsgs: []
+  }
+}
+
+function getEnvPath (env: string) {
+  const cwd = getCWD()
+  return `${cwd}/.cosmwander/${env}`
+}
+
+function getContractPath (env: string, fname: string) {
+  const cwd = getCWD()
+  return `${cwd}/.cosmwander/${env}/contracts/${fname}.json`
+}
+
+export function createWanderStore (env?: string) {
+  // create a store for the contracts (.cosmwander folder)
+  // this is where we will store the contract names, codes, and addresses for different environments
+  const cwd = getCWD()
+
+  if (env) {
+    if (!fs.existsSync(getEnvPath(env)))
+      fs.mkdirSync(`${getEnvPath(env)}/contracts`, { recursive: true })
+  } else {
+    if (!fs.existsSync(`${cwd}/.cosmwander`)) fs.mkdirSync(`${cwd}/.cosmwander`)
+  }
+}
+
+export function saveMeta (contractMeta: ContractMetadata, env: string) {
+  // if .cosmwander doesn't exist, call initWanderStore to create it
+  if (!fs.existsSync(`${getEnvPath(env)}/contracts`)) {
+    createWanderStore(env)
+  }
+
+  const { fileName } = contractMeta
+  const contractStateFilePath = getContractPath(env, fileName)
+
+  if (!fs.existsSync(contractStateFilePath)) {
+    // create the file
+    fs.writeFileSync(contractStateFilePath, '')
+  }
+
+  fs.writeFileSync(contractStateFilePath, JSON.stringify(contractMeta, null, 2))
+}
+
+export function loadMeta (
+  contractFileName: string,
+  env: string
+): ContractMetadata {
+  if (!env || !fs.existsSync(getContractPath(env, contractFileName)))
+    return getDefaultForContractFilename(contractFileName)
+
+  const contractStateFilePath = getContractPath(env, contractFileName)
+  const contractMeta = JSON.parse(
+    fs.readFileSync(contractStateFilePath, 'utf8')
+  )
+
+  // migrations start
+
+  // initMsgs in contract root, added Nov 14 2022
+  if (!contractMeta.initMsgs) {
+    contractMeta.initMsgs = []
+  }
+  // migrations end
+
+  return contractMeta
+}
+
+export function getActiveCode (
+  contract: ContractMetadata,
+  codeID: string
+): CodeMetadata | undefined {
+  return contract.codes.find(c => c.codeID === codeID)
 }

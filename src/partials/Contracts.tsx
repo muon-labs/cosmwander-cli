@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from 'react'
-import { useAppContext } from '../context/ScreenContext'
+import { ContractMetadata, useAppContext } from '../context/ScreenContext'
 import fs from 'fs'
-import { getCWD } from '../utils/fileUtils'
+import { formatWithUnderscores, getCWD, loadMeta } from '../utils/fileUtils'
+import chalk from 'chalk'
 
 const Contracts = ({}) => {
-  const { width, height, contract, setContract } = useAppContext()
+  const {
+    width,
+    height,
+    contract,
+    setContract,
+    codeId,
+    setCodeId,
+    contractInstanceAddress,
+    setContractInstanceAddress,
+    env,
+    log
+  } = useAppContext()
   const [contracts, setContracts] = useState<string[]>([])
   const [err, setErr] = useState('')
 
@@ -33,6 +45,103 @@ const Contracts = ({}) => {
     console.log({ width, height })
   }, [width, height])
 
+  function getContractDisplayHeight (c: string) {
+    let contractDisplayHeight = 3
+    if (contract?.fileName === c && contract.codes.length)
+      contractDisplayHeight +=
+        contract.codes.length +
+        contract.codes.reduce((a, c) => a + c.deployedContracts.length, 0)
+    return contractDisplayHeight
+  }
+
+  function setSelection (c: string, codeID: string, contractAddress: string) {
+    log(`Setting contract to ${c} and codeID to ${codeID || 'undefined'}`)
+    const meta = loadMeta(c, env)
+    setContract(meta)
+
+    if (codeID) setCodeId(codeID)
+    else setCodeId('')
+
+    if (contractAddress) setContractInstanceAddress(contractAddress)
+    else setContractInstanceAddress('')
+  }
+
+  function getTopForContract (i: number) {
+    return contracts.reduce((acc, c, j) => {
+      if (j < i) {
+        return acc + getContractDisplayHeight(c)
+      }
+      return acc
+    }, 0)
+  }
+
+  function renderContract (c: string) {
+    return (
+      <button
+        height={1}
+        mouse
+        // @ts-ignore
+        onPress={() => setSelection(c, '')}
+      >
+        {`${c}`}
+      </button>
+    )
+  }
+
+  function renderActiveContract (
+    c: string,
+    cMeta: ContractMetadata,
+    i: number
+  ) {
+    let render = [renderContract(`${!codeId ? chalk.inverse(c) : c}`)]
+
+    if (contract?.fileName === c && contract.codes.length) {
+      contract.codes.forEach((codeMeta, i) => {
+        const codeIdText = `└ ${codeMeta.codeID}`
+
+        render.push(
+          <button
+            mouse
+            // @ts-ignore
+            onPress={() => setSelection(c, codeMeta.codeID)}
+            key={c + codeMeta.codeID}
+            top={i + 1}
+            height={1}
+          >
+            {(codeId === codeMeta.codeID && !contractInstanceAddress)
+              ? chalk.inverse(codeIdText)
+              : codeIdText}
+          </button>
+        )
+
+        codeMeta.deployedContracts.forEach((contractInstance, j) => {
+          const contractInstanceText = `  └ ${contractInstance.address.slice(
+            0,
+            8
+          )}...${contractInstance.address.slice(-8)}`
+
+          render.push(
+            <button
+              mouse
+              // @ts-ignore
+              onPress={() =>
+                setSelection(c, codeMeta.codeID, contractInstance.address)
+              }
+              key={c + codeMeta.codeID + contractInstance.address}
+              top={i + 1 + j + 1}
+              height={1}
+            >
+              {contractInstance.address === contractInstanceAddress
+                ? chalk.inverse(contractInstanceText)
+                : contractInstanceText}
+            </button>
+          )
+        })
+      })
+    }
+    return render
+  }
+
   return (
     <box
       label=' contracts '
@@ -45,22 +154,22 @@ const Contracts = ({}) => {
         <text style={{ fg: 'red' }}>{err}</text>
       ) : (
         contracts.map((c, i) => {
+          let render
+          if (contract?.fileName === c) {
+            const cMeta = loadMeta(c, env)
+            render = renderActiveContract(c, cMeta, i)
+          } else {
+            render = renderContract(c)
+          }
+
+          const top = getTopForContract(i)
+          const height = getContractDisplayHeight(c)
+
           return (
-            <button
-              mouse
-              // @ts-ignore
-              onPress={() => setContract(c)}
-              key={c}
-              top={i * 3}
-              height={c === contract ? 4 : 3}
-              bg={c === contract ? 'white' : 'transparent'}
-              border={
-                c === contract ? { type: 'bg', bg: 'white' } : { type: 'line' }
-              }
-            >
+            <box key={c} top={top} height={height} border={{ type: 'line' }}>
               {/* {`${c}${c === contract ?'\n └1':''}`} */}
-              {`${c}`}
-            </button>
+              {render}
+            </box>
           )
         })
       )}

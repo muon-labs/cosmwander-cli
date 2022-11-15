@@ -3,6 +3,7 @@ import React from 'react'
 import { render } from 'react-blessed'
 import App from './App'
 import { AppWrapper } from './context/ScreenContext'
+import ErrorBoundary from './utils/ErrorBoundary'
 
 // Creating our screen
 const screen = blessed.screen({
@@ -18,8 +19,11 @@ screen.key(['escape', 'q', 'C-c'], function (ch, key) {
 
 // Rendering the React app using our screen
 render(
-  <AppWrapper screen={screen}>
-    <App />
-  </AppWrapper>,
+  <ErrorBoundary>
+    <AppWrapper screen={screen}>
+      <App />
+    </AppWrapper>
+  </ErrorBoundary>,
+
   screen
 )
