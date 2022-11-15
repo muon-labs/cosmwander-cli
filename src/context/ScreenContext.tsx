@@ -27,8 +27,6 @@ export interface MsgMetadata {
 
 export interface ContractInstanceMetadata {
   address: string
-  executeMsgs: MsgMetadata[]
-  queryMsgs: MsgMetadata[]
 }
 
 export interface CodeMetadata {
@@ -41,6 +39,8 @@ export interface ContractMetadata {
   buildName: string // same as filename generally but with underscores
   codes: CodeMetadata[]
   initMsgs: MsgMetadata[]
+  executeMsgs: MsgMetadata[]
+  queryMsgs: MsgMetadata[]
 }
 
 const AppContext = createContext({

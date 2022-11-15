@@ -41,10 +41,6 @@ const Contracts = ({}) => {
     })
   }, [])
 
-  useEffect(() => {
-    console.log({ width, height })
-  }, [width, height])
-
   function getContractDisplayHeight (c: string) {
     let contractDisplayHeight = 3
     if (contract?.fileName === c && contract.codes.length)
@@ -78,6 +74,7 @@ const Contracts = ({}) => {
   function renderContract (c: string) {
     return (
       <button
+        key={c}
         height={1}
         mouse
         // @ts-ignore
@@ -108,7 +105,7 @@ const Contracts = ({}) => {
             top={i + 1}
             height={1}
           >
-            {(codeId === codeMeta.codeID && !contractInstanceAddress)
+            {codeId === codeMeta.codeID && !contractInstanceAddress
               ? chalk.inverse(codeIdText)
               : codeIdText}
           </button>

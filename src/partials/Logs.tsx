@@ -4,6 +4,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import { WriteStream } from 'fs'
 import FromStream from '../utils/FromStream'
 import { SpawnCommand, useAppContext } from '../context/ScreenContext'
+import chalk from 'chalk'
 
 let currentCommandOutput = ''
 
@@ -16,7 +17,13 @@ function hashCommand (cmd: SpawnCommand) {
 function spawnOrGetFunction (cmd: SpawnCommand) {
   const hash = hashCommand(cmd)
   if (outs[hash]) return outs[hash]
-  outs[hash] = spawn(cmd.command, cmd.args, { cwd: cmd.cwd, env: cmd.env })
+  outs[hash] = spawn(cmd.command, cmd.args, {
+    cwd: cmd.cwd,
+    env: {
+      ...process.env,
+      ...cmd.env
+    }
+  })
   return outs[hash]
 }
 
@@ -37,7 +44,7 @@ const Logs = ({ height, top }: { height: TPosition; top: TPosition }) => {
   }, [command])
 
   useEffect(() => {
-    setOutput(output + logAppendContent )
+    setOutput(output + logAppendContent)
     scrollToBottom()
   }, [logAppendContent])
 
@@ -92,7 +99,9 @@ const Logs = ({ height, top }: { height: TPosition; top: TPosition }) => {
   return (
     <box
       label={
-        command ? ` ${command.command} ${command.args.join(' ')} ` : ' logs '
+        command
+          ? chalk.bgRed(` ${command.command} ${command.args.join(' ')} `)
+          : ' logs '
       }
       ref={logBoxRef}
       border={{ type: 'line' }}

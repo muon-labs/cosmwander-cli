@@ -4,10 +4,6 @@ import { useAppContext } from '../context/ScreenContext'
 const Debug = ({}) => {
   const { width, height } = useAppContext()
 
-  useEffect(() => {
-    console.log({ width, height })
-  }, [width, height])
-
   return (
     <box
       label=' debug '

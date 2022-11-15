@@ -10,7 +10,22 @@ import {
 import { getEnv } from '../../utils/commandUtils'
 import { getActiveCode, getCWD } from '../../utils/fileUtils'
 
-const CodeWindow = () => {
+// GenericMsgTab can execute arbitrary init/execute/query messages given the right params
+const GenericMsgTab = ({
+  label,
+  type,
+  savedMsgs,
+  saveMsg,
+  deleteMsg,
+  sendMsg
+}: {
+  label: string
+  type: 'init' | 'execute' | 'query'
+  savedMsgs: MsgMetadata[]
+  saveMsg: (msg: MsgMetadata, i: number | null) => void
+  deleteMsg: (index: number) => void
+  sendMsg: (msg: MsgMetadata) => void
+}) => {
   const {
     contract,
     setContract,
@@ -25,14 +40,14 @@ const CodeWindow = () => {
   } = useAppContext()
 
   const [view, setView] = useState<'saved-msgs' | 'new-msg'>(
-    contract?.initMsgs.length ? 'saved-msgs' : 'new-msg'
+    savedMsgs.length ? 'saved-msgs' : 'new-msg'
   )
   const [activeMsg, setActiveMsg] = useState<number | null>(null)
 
   const msgTitle = useRef(null)
   const input = useRef(null)
 
-  const saveInitMsg = () => {
+  const saveMsgWrapper = () => {
     // @ts-ignore
     const title = msgTitle.current.getValue()
     // @ts-ignore
@@ -41,23 +56,13 @@ const CodeWindow = () => {
     log(`saving new msg: ${title}`)
 
     if (contract && contract.fileName && codeId && env) {
-      setContract({
-        ...contract,
-        initMsgs:
-          activeMsg === null
-            ? [
-                ...contract.initMsgs,
-                {
-                  title,
-                  msg
-                }
-              ]
-            : contract.initMsgs.map((m, i) => {
-                if (i === activeMsg) return { title, msg }
-                return m
-              })
-      })
-
+      saveMsg(
+        {
+          title,
+          msg
+        },
+        activeMsg
+      )
       setView('saved-msgs')
       setActiveMsg(null)
     } else {
@@ -65,12 +70,9 @@ const CodeWindow = () => {
     }
   }
 
-  const deleteMsg = (i: number) => {
+  const deleteMsgWrapper = (i: number) => {
     if (contract && contract.fileName && codeId && env) {
-      setContract({
-        ...contract,
-        initMsgs: contract.initMsgs.filter((_, j) => j !== i)
-      })
+      deleteMsg(i)
     } else {
       log(
         'error deleting msg: contract, codeId, or env not set for some reason'
@@ -78,97 +80,9 @@ const CodeWindow = () => {
     }
   }
 
-  function listContractsByCodeCallback (output: string) {
-    if (!output) return
-    log(output)
-
-    const contracts = JSON.parse(output.split('\n')[0]).contracts
-    const contractAddress = contracts[contracts.length - 1]
-
-    log(chalk.bold(chalk.red('deployed contract address: ' + contractAddress)))
-    setContract({
-      ...contract!,
-      codes: contract!.codes.map(codeMeta => {
-        if (codeMeta.codeID === codeId) {
-          return {
-            ...codeMeta,
-            deployedContracts: [
-              ...codeMeta.deployedContracts,
-              {
-                address: contractAddress,
-                executeMsgs: [],
-                queryMsgs: []
-              }
-            ]
-          }
-        }
-        return codeMeta
-      })
-    })
-    setContractInstanceAddress(contractAddress)
-  }
-
-  function initCallback (_output: string) {
-    if (!_output) return
-    // log("here23")
-    // var stack = new Error().stack
-    // log(stack)
-    // log(_output)
-    log('init complete, fetching contract address...')
-    const envConfig = getEnv(env)
-
-    setCommand({
-      command: envConfig.command,
-      args: [
-        'query',
-        'wasm',
-        'list-contract-by-code',
-        codeId,
-        '--output',
-        'json',
-        '--node',
-        envConfig.node
-      ],
-      cwd: getCWD(),
-      callback: listContractsByCodeCallback
-    })
-  }
-
-  const sendInitMsg = (i: number) => {
+  const sendMsgWrapper = (i: number) => {
     if (contract && contract.fileName && codeId && env) {
-      const msg = contract.initMsgs[i]
-      const envConfig = getEnv(env)
-
-      setCommand({
-        command: envConfig.command,
-        args: [
-          'tx',
-          'wasm',
-          'instantiate',
-          codeId,
-          msg.msg,
-          '--from',
-          envConfig.keyName,
-          '--label',
-          msg.title,
-          '--gas-prices',
-          envConfig.feeAmount + envConfig.feeDenom,
-          '--gas',
-          'auto',
-          '--gas-adjustment',
-          '1.3',
-          '-b',
-          'block',
-          '-y',
-          '--no-admin',
-          '--node',
-          envConfig.node,
-          '--chain-id',
-          envConfig.chainId
-        ],
-        cwd: getCWD(),
-        callback: initCallback
-      })
+      sendMsg(savedMsgs[i])
     } else {
       log('error sending msg: contract, codeId, or env not set for some reason')
     }
@@ -177,11 +91,18 @@ const CodeWindow = () => {
   useEffect(() => {
     if (msgTitle.current && input.current) {
       // @ts-ignore
-      msgTitle.current.setValue(`${contract?.fileName}'s init message`)
+      msgTitle.current.setValue(`${contract?.fileName}'s ${type} message`)
       // @ts-ignore
       msgTitle.current.key(['escape', 'C-c'], () => {
         // @ts-ignore
         msgTitle.current.cancel()
+      })
+      // @ts-ignore
+      msgTitle.current.key(['tab'], () => {
+        // @ts-ignore
+        msgTitle.current.cancel()
+        // @ts-ignore
+        input.current.focus()
       })
 
       // @ts-ignore
@@ -194,7 +115,7 @@ const CodeWindow = () => {
 
   useEffect(() => {
     if (activeMsg !== null && view === 'new-msg') {
-      const msg = contract!.initMsgs[activeMsg]
+      const msg = savedMsgs[activeMsg]
       log(`loading msg ${activeMsg}: ${msg.title}`)
       // @ts-ignore
       msgTitle.current.setValue(msg.title)
@@ -206,7 +127,7 @@ const CodeWindow = () => {
   return (
     <box top={0} left={0}>
       <text left={1}>
-        {chalk.bold(`Code ID: ${codeId} Init Msg`) +
+        {chalk.bold(chalk.bgGreen(`${label}`)) +
           chalk.gray(' (press esc if stuck)')}
       </text>
       {view === 'new-msg' ? (
@@ -250,16 +171,16 @@ const CodeWindow = () => {
             border={{ type: 'line' }}
             mouse
             // @ts-ignore
-            onPress={saveInitMsg}
+            onPress={saveMsgWrapper}
           >
             Save this message
           </button>
         </>
       ) : (
         <>
-          {contract?.initMsgs.map((msg: MsgMetadata, i: number) => {
+          {savedMsgs.map((msg: MsgMetadata, i: number) => {
             return (
-              <box key={i} top={i * 3} height={3} width={'100%'}>
+              <box key={i} top={i * 3 + 1} height={3} width={'100%'}>
                 <button
                   top={0}
                   height={3}
@@ -282,7 +203,7 @@ const CodeWindow = () => {
                   border={{ type: 'line' }}
                   mouse
                   // @ts-ignore
-                  onPress={() => deleteMsg(i)}
+                  onPress={() => deleteMsgWrapper(i)}
                 >
                   {` X `}
                 </button>
@@ -294,9 +215,9 @@ const CodeWindow = () => {
                   border={{ type: 'line' }}
                   mouse
                   // @ts-ignore
-                  onPress={() => sendInitMsg(i)}
+                  onPress={() => sendMsgWrapper(i)}
                 >
-                  {` Init `}
+                  {` ${type.toLocaleUpperCase()} `}
                 </button>
               </box>
             )
@@ -319,4 +240,4 @@ const CodeWindow = () => {
   )
 }
 
-export default CodeWindow
+export default GenericMsgTab

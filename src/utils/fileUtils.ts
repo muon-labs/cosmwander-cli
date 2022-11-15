@@ -1,6 +1,10 @@
 import fs from 'fs'
 import { execSync } from 'child_process'
-import { CodeMetadata, ContractInstanceMetadata, ContractMetadata } from '../context/ScreenContext'
+import {
+  CodeMetadata,
+  ContractInstanceMetadata,
+  ContractMetadata
+} from '../context/ScreenContext'
 
 export function getCWD () {
   const rootPath =
@@ -63,7 +67,9 @@ export function getDefaultForContractFilename (
     fileName: contract,
     buildName: formatWithUnderscores(contract),
     codes: [],
-    initMsgs: []
+    initMsgs: [],
+    executeMsgs: [],
+    queryMsgs: []
   }
 }
 
@@ -74,17 +80,23 @@ export function getDefaultForCodeId (codeID: string): CodeMetadata {
   }
 }
 
-export function getDefaultForContractInstance(address: string) : ContractInstanceMetadata {
+export function getDefaultForContractInstance (
+  address: string
+): ContractInstanceMetadata {
   return {
-    address,
-    executeMsgs: [],
-    queryMsgs: []
+    address
   }
 }
 
 function getEnvPath (env: string) {
   const cwd = getCWD()
   return `${cwd}/.cosmwander/${env}`
+}
+
+function loadEnvs () {
+  const cwd = getCWD()
+  const envs = fs.readdirSync(`${cwd}/.cosmwander`)
+  return envs
 }
 
 function getContractPath (env: string, fname: string) {
@@ -122,6 +134,14 @@ export function saveMeta (contractMeta: ContractMetadata, env: string) {
   fs.writeFileSync(contractStateFilePath, JSON.stringify(contractMeta, null, 2))
 }
 
+export function getActiveCode (
+  contract: ContractMetadata,
+  codeID: string
+): CodeMetadata | undefined {
+  return contract.codes.find(c => c.codeID === codeID)
+}
+
+////// KEEP THIS FUNCTION LAST
 export function loadMeta (
   contractFileName: string,
   env: string
@@ -140,14 +160,16 @@ export function loadMeta (
   if (!contractMeta.initMsgs) {
     contractMeta.initMsgs = []
   }
+
+  // executeMsgs and queryMsgs in contract root, added Nov 15 2022
+  if (!contractMeta.executeMsgs) {
+    contractMeta.executeMsgs = []
+  }
+  if (!contractMeta.queryMsgs) {
+    contractMeta.queryMsgs = []
+  }
+
   // migrations end
 
   return contractMeta
-}
-
-export function getActiveCode (
-  contract: ContractMetadata,
-  codeID: string
-): CodeMetadata | undefined {
-  return contract.codes.find(c => c.codeID === codeID)
 }

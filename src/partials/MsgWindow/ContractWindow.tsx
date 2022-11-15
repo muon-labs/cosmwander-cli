@@ -20,11 +20,8 @@ const ContractWindow = ({
   const {
     contract,
     setContract,
-    codeId,
     setCodeId,
-    command,
     setCommand,
-    width,
     env,
     log
   } = useAppContext()
@@ -33,10 +30,10 @@ const ContractWindow = ({
     setCommand({
       command: 'cargo',
       args: ['build', '--release', '--target', 'wasm32-unknown-unknown'],
-      cwd: getContractDirectory(contract!.fileName) // always defined here
-      // env: {
-      //   RUSTFLAGS: '-C link-arg=-s'
-      // }
+      cwd: getContractDirectory(contract!.fileName), // always defined here
+      env: {
+        RUSTFLAGS: '-C link-arg=-s'
+      }
     })
   }
 
@@ -63,8 +60,8 @@ const ContractWindow = ({
 
   function uploadCallback (output: string) {
     if (!output) {
-        log('No output from upload command.')
-        return
+      log('No output from upload command.')
+      return
     }
     const events = JSON.parse(output.split('\n')[1]).logs[0].events
     const codeID = events[events.length - 1].attributes[0].value as string
