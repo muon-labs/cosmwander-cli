@@ -31,12 +31,15 @@ const CodeWindow = () => {
 
   const msgTitle = useRef(null)
   const input = useRef(null)
+  const funds = useRef(null)
 
   const saveInitMsg = () => {
     // @ts-ignore
     const title = msgTitle.current.getValue()
     // @ts-ignore
     const msg = input.current.getValue()
+    // @ts-ignore
+    const funds = funds.current.getValue()
 
     log(`saving new msg: ${title}`)
 
@@ -49,11 +52,12 @@ const CodeWindow = () => {
                 ...contract.initMsgs,
                 {
                   title,
-                  msg
+                  msg,
+                  funds
                 }
               ]
             : contract.initMsgs.map((m, i) => {
-                if (i === activeMsg) return { title, msg }
+                if (i === activeMsg) return { title, msg, funds }
                 return m
               })
       })
@@ -138,6 +142,7 @@ const CodeWindow = () => {
     if (contract && contract.fileName && codeId && env) {
       const msg = contract.initMsgs[i]
       const envConfig = getEnv(env)
+      const funds = msg.funds 
 
       setCommand({
         command: envConfig.command,
@@ -164,7 +169,8 @@ const CodeWindow = () => {
           '--node',
           envConfig.node,
           '--chain-id',
-          envConfig.chainId
+          envConfig.chainId,
+          ...(funds ? ['--amount', funds] : [])
         ],
         cwd: getCWD(),
         callback: initCallback
@@ -175,7 +181,7 @@ const CodeWindow = () => {
   }
 
   useEffect(() => {
-    if (msgTitle.current && input.current) {
+    if (msgTitle.current && input.current && funds.current) {
       // @ts-ignore
       msgTitle.current.setValue(`${contract?.fileName}'s init message`)
       // @ts-ignore
@@ -184,6 +190,11 @@ const CodeWindow = () => {
         msgTitle.current.cancel()
       })
 
+      // @ts-ignore
+      funds.current.key(['escape', 'C-c'], () => {
+        // @ts-ignore
+        funds.current.cancel()
+      })
       // @ts-ignore
       input.current.key(['escape', 'C-c'], () => {
         // @ts-ignore
@@ -200,6 +211,8 @@ const CodeWindow = () => {
       msgTitle.current.setValue(msg.title)
       // @ts-ignore
       input.current.setValue(msg.msg)
+      // @ts-ignore
+      funds.current.setValue(msg.funds)
     }
   }, [activeMsg, view])
 
@@ -211,10 +224,11 @@ const CodeWindow = () => {
       </text>
       {view === 'new-msg' ? (
         <>
-          <textbox
+           <textbox
             label={chalk.green(' msg title (for saving)')}
             top={1}
             height={3}
+            width={'60%-1'}
             border={{ type: 'line' }}
             ref={msgTitle}
             keys
@@ -227,9 +241,21 @@ const CodeWindow = () => {
             inputOnFocus
             top={4}
             height={6}
+            width={'60%-1'}
             keys
             mouse
             border={{ type: 'line' }}
+          />
+          <textarea
+            label={chalk.green(' funds (ex: 10uosmo) ')}
+            ref={funds}
+            inputOnFocus
+            top={1}
+            height={3}
+            left={'60%'}
+            border={{ type: 'line' }}
+            keys
+            mouse
           />
           <button
             top={10}

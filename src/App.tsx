@@ -4,16 +4,16 @@ import Debug from './partials/Debug'
 import EnvList from './partials/EnvList'
 import Logs from './partials/Logs'
 import MsgWindow from './partials/MsgWindow'
-import { IS_DEBUG } from './utils/config'
+import { IS_DEBUG, SIDEBAR_WIDTH } from './utils/config'
 import { getCenterColWidth } from './utils/windowUtils'
 
 // Rendering a simple centered box
 const App = ({}) => {
   const { width, height } = useAppContext() as { width: number; height: number }
 
-  const firstColWidth = Math.floor(Math.min(width * 0.3, 40))
+  const firstColWidth = Math.floor(Math.min(width * 0.3, SIDEBAR_WIDTH))
   const secondColWidth = getCenterColWidth(width)
-  const lastColWidth = Math.floor(Math.min(width * 0.3, 40))
+  const lastColWidth = Math.floor(Math.min(width * 0.3, SIDEBAR_WIDTH))
   const secondColLeft = firstColWidth
   // const lastColLeft = firstColWidth + secondColWidth
 

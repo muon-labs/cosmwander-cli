@@ -75,6 +75,7 @@ const ExecuteMsgTab = () => {
         6
       )}...${contractInstanceAddress.slice(-6)})`}
       type={'execute'}
+      includeFunds={true}
       savedMsgs={contract!.executeMsgs}
       saveMsg={saveExecuteMsg}
       deleteMsg={deleteExecuteMsg}

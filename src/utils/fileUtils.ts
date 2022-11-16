@@ -7,9 +7,9 @@ import {
 } from '../context/ScreenContext'
 
 export function getCWD () {
-  // const rootPath =
-  //   '/Users/nikitajerschow/Documents/PassiveIncome/CryptoBase/QuasarBase/quasar/smart-contracts'
-  // return rootPath
+  const rootPath =
+    '/Users/nikitajerschow/Documents/PassiveIncome/CryptoBase/QuasarBase/quasar/smart-contracts'
+  return rootPath
   return process.cwd()
 }
 
@@ -139,6 +139,14 @@ export function getActiveCode (
   codeID: string
 ): CodeMetadata | undefined {
   return contract.codes.find(c => c.codeID === codeID)
+}
+
+export function saveCommandToHistory (command: string) {
+  if (!fs.existsSync(`${getCWD()}/.cosmwander/cmd-history.log`)) {
+    fs.writeFileSync(`${getCWD()}/.cosmwander/cmd-history`, '')
+  }
+
+  fs.appendFileSync(`${getCWD()}/.cosmwander/cmd-history.log`, `${command}\n`)
 }
 
 ////// KEEP THIS FUNCTION LAST

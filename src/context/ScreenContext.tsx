@@ -23,6 +23,7 @@ export interface SpawnCommand {
 export interface MsgMetadata {
   title: string
   msg: string
+  funds: string
 }
 
 export interface ContractInstanceMetadata {

@@ -1,20 +1,14 @@
 import * as chalk from 'chalk'
 import { useEffect, useRef, useState } from 'react'
-import { DetailedBlessedProps, TextareaElement } from 'react-blessed'
-import {
-  ContractMetadata,
-  CodeMetadata,
-  useAppContext,
-  MsgMetadata
-} from '../../context/ScreenContext'
+import { MsgMetadata, useAppContext } from '../../context/ScreenContext'
 import { getEnv } from '../../utils/commandUtils'
-import { getActiveCode, getCWD } from '../../utils/fileUtils'
 
 // GenericMsgTab can execute arbitrary init/execute/query messages given the right params
 const GenericMsgTab = ({
   label,
   type,
   savedMsgs,
+  includeFunds,
   saveMsg,
   deleteMsg,
   sendMsg
@@ -22,6 +16,7 @@ const GenericMsgTab = ({
   label: string
   type: 'init' | 'execute' | 'query'
   savedMsgs: MsgMetadata[]
+  includeFunds?: boolean
   saveMsg: (msg: MsgMetadata, i: number | null) => void
   deleteMsg: (index: number) => void
   sendMsg: (msg: MsgMetadata) => void
@@ -46,12 +41,15 @@ const GenericMsgTab = ({
 
   const msgTitle = useRef(null)
   const input = useRef(null)
+  const funds = useRef(null)
 
   const saveMsgWrapper = () => {
     // @ts-ignore
     const title = msgTitle.current.getValue()
     // @ts-ignore
     const msg = input.current.getValue()
+    // @ts-ignore
+    const funds = funds.current.getValue()
 
     log(`saving new msg: ${title}`)
 
@@ -59,7 +57,8 @@ const GenericMsgTab = ({
       saveMsg(
         {
           title,
-          msg
+          msg,
+          funds
         },
         activeMsg
       )
@@ -89,27 +88,41 @@ const GenericMsgTab = ({
   }
 
   useEffect(() => {
-    if (msgTitle.current && input.current) {
-      // @ts-ignore
-      msgTitle.current.setValue(`${contract?.fileName}'s ${type} message`)
-      // @ts-ignore
-      msgTitle.current.key(['escape', 'C-c'], () => {
+    try {
+      if (funds.current) {
         // @ts-ignore
-        msgTitle.current.cancel()
-      })
-      // @ts-ignore
-      msgTitle.current.key(['tab'], () => {
-        // @ts-ignore
-        msgTitle.current.cancel()
-        // @ts-ignore
-        input.current.focus()
-      })
+        funds.current.key(['escape', 'C-c'], () => {
+          // @ts-ignore
+          funds.current.cancel()
+        })
 
-      // @ts-ignore
-      input.current.key(['escape', 'C-c'], () => {
         // @ts-ignore
-        input.current.cancel()
-      })
+        funds.current.setValue('0')
+      }
+      if (msgTitle.current && input.current) {
+        // @ts-ignore
+        msgTitle.current.setValue(`${contract?.fileName}'s ${type} message`)
+        // @ts-ignore
+        msgTitle.current.key(['escape', 'C-c'], () => {
+          // @ts-ignore
+          msgTitle.current.cancel()
+        })
+        // @ts-ignore
+        msgTitle.current.key(['tab'], () => {
+          // @ts-ignore
+          msgTitle.current.cancel()
+          // @ts-ignore
+          input.current.focus()
+        })
+
+        // @ts-ignore
+        input.current.key(['escape', 'C-c'], () => {
+          // @ts-ignore
+          input.current.cancel()
+        })
+      }
+    } catch (e) {
+      console.error(e)
     }
   }, [])
 
@@ -143,15 +156,29 @@ const GenericMsgTab = ({
             mouse
           />
           <textarea
-            label={chalk.green(' msg value (must be valid json) ')}
+            label={chalk.green(' msg value (valid json) ')}
             ref={input}
             inputOnFocus
             top={4}
             height={6}
+            width={includeFunds ? '70%-1' : '100%-1'}
             keys
             mouse
             border={{ type: 'line' }}
           />
+          {includeFunds && (
+            <textarea
+              label={chalk.green(' funds ')}
+              ref={funds}
+              inputOnFocus
+              top={4}
+              height={6}
+              left={'70%'}
+              border={{ type: 'line' }}
+              keys
+              mouse
+            />
+          )}
           <button
             top={10}
             height={3}

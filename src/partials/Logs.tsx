@@ -2,6 +2,7 @@ import * as chalk from 'chalk'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import { useEffect, useRef, useState } from 'react'
 import { SpawnCommand, useAppContext } from '../context/ScreenContext'
+import { saveCommandToHistory } from '../utils/fileUtils'
 import { TPosition } from '../utils/types'
 
 let currentCommandOutput = ''
@@ -13,6 +14,8 @@ function hashCommand (cmd: SpawnCommand) {
   return `${cmd.command}${cmd.args.join('')}${cmd.cwd}`
 }
 function spawnOrGetFunction (cmd: SpawnCommand) {
+  saveCommandToHistory(JSON.stringify(cmd, null, 2))
+  
   const hash = hashCommand(cmd)
   if (outs[hash]) return outs[hash]
   outs[hash] = spawn(cmd.command, cmd.args, {
